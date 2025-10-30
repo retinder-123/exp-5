@@ -1,0 +1,99 @@
+// app.js
+
+const mongoose = require("mongoose");
+
+// 1. Connect to MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/ecommerceDB", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log("Connected to MongoDB"))
+.catch(err => console.error("MongoDB connection error:", err));
+
+// 2. Define Variant Schema
+const variantSchema = new mongoose.Schema({
+  color: String,
+  size: String,
+  stock: Number
+});
+
+// 3. Define Product Schema
+const productSchema = new mongoose.Schema({
+  name: String,
+  price: Number,
+  category: String,
+  variants: [variantSchema]
+});
+
+// 4. Create Product Model
+const Product = mongoose.model("Product", productSchema);
+
+// 5. Insert Sample Products
+const insertProducts = async () => {
+  await Product.deleteMany({}); // Clean collection before insert
+
+  await Product.insertMany([
+    {
+      name: "T-Shirt",
+      price: 499,
+      category: "Clothing",
+      variants: [
+        { color: "Red", size: "M", stock: 20 },
+        { color: "Blue", size: "L", stock: 15 }
+      ]
+    },
+    {
+      name: "Sneakers",
+      price: 2999,
+      category: "Footwear",
+      variants: [
+        { color: "White", size: 42, stock: 10 },
+        { color: "Black", size: 43, stock: 5 }
+      ]
+    },
+    {
+      name: "Laptop",
+      price: 45000,
+      category: "Electronics",
+      variants: [
+        { color: "Silver", size: "15 inch", stock: 7 },
+        { color: "Gray", size: "13 inch", stock: 12 }
+      ]
+    }
+  ]);
+
+  console.log("Sample products inserted successfully!");
+};
+
+// 6. Retrieve All Products
+const getAllProducts = async () => {
+  const products = await Product.find();
+  console.log("\nAll Products:");
+  console.log(products);
+};
+
+// 7. Filter Products by Category
+const getProductsByCategory = async (category) => {
+  const products = await Product.find({ category: category });
+  console.log(`\nProducts in category '${category}':`);
+  console.log(products);
+};
+
+// 8. Project Specific Variant Details
+const getVariantDetails = async () => {
+  const products = await Product.find({}, { name: 1, "variants.color": 1, "variants.stock": 1, _id: 0 });
+  console.log("\nProducts with Variant Colors & Stock:");
+  console.log(products);
+};
+
+// 9. Main Execution
+const main = async () => {
+  await insertProducts();
+  await getAllProducts();
+  await getProductsByCategory("Footwear");
+  await getVariantDetails();
+
+  mongoose.connection.close();
+};
+
+main();
